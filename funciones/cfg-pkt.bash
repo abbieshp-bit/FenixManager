@@ -1976,16 +1976,19 @@ cfg_udpcustom(){
         prompt=$(date "+%x %X")
         printf "\33[2K\r${WHITE}[$BBLUE${prompt}${WHITE}] : " 2>/dev/null && read   option
         case $option in
-            1)
-                # Cambiar puertos
-                port_input && local porti="${puertos_array[0]}" && unset puertos_array
-                jq ".listen = \":${porti}\"" config.json > /root/udp/config.json
-                bar "systemctl restart udp-custom" || {
-                    error "Fallo al agregar los puertos"
-                    exit 1
-                }
-                cfg_udpcustom
-                ;;
+           1)
+    # Cambiar puertos
+    port_input && local porti="${puertos_array[0]}" && unset puertos_array
+    jq ".listen = \":${porti}\"" "$config" > "${config}.tmp" && mv "${config}.tmp" "$config" || {
+        error "Fallo al generar la nueva configuracion de udp-custom"
+        exit 1
+    }
+    bar "systemctl restart udp-custom" || {
+        error "Fallo al agregar los puertos"
+        exit 1
+    }
+    cfg_udpcustom
+    ;;
             2)
                 [ -z $is_active ] && {
                     bar "systemctl start udp-custom"
